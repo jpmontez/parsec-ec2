@@ -6,7 +6,7 @@ echo "Detecting the least expensive AZ in your region."
 
 vpc_id=$(aws --region $aws_region ec2 describe-vpcs | jq '.Vpcs[] | .VpcId + "#\(.IsDefault)"' | sed -e 's/"//g' | grep '#true' | cut -d '#' -f 1)
 
-reservation_data=$(aws --region $aws_region ec2 describe-spot-price-history --instance-types g2.2xlarge --start-time="$(date -v-1d)" --product-description=Windows | jq '.SpotPriceHistory[] | .Timestamp + "#" + .SpotPrice + "#" + .AvailabilityZone' | sed -e 's/"//g' | sort | tail -n 10)
+reservation_data=$(aws --region $aws_region ec2 describe-spot-price-history --instance-types g3.4xlarge --start-time="$(date -v-1d)" --product-description=Windows | jq '.SpotPriceHistory[] | .Timestamp + "#" + .SpotPrice + "#" + .AvailabilityZone' | sed -e 's/"//g' | sort | tail -n 10)
 azs=$(aws --region $aws_region ec2 describe-availability-zones | jq '.AvailabilityZones[] | .ZoneName' | sed -e 's/"//g')
 
 cheapest="10000000.0"
@@ -25,7 +25,11 @@ done
 
 subnet_id=$(aws --region $aws_region ec2 describe-subnets | jq ' .Subnets[] |  .SubnetId + "#" + .AvailabilityZone' | sed -e 's/"//g' | grep "$cheapest_az" | cut -d '#' -f 1)
 
-echo "Detected $cheapest_az as the least expensive availability zone in your region for g2.2xlarge spots at \$$cheapest/hr."
+echo "Detected $cheapest_az as the least expensive availability zone in your region for g3.4xlarge spots at \$$cheapest/hr."
+
+spot_bid=$(echo "$cheapest 0.10" | awk '{printf "%f", $1 + $2}')
+
+echo "Spot instance bid price will be set at \$$spot_bid/hr."
 }
 
 if ! aws --version &> /dev/null; then
@@ -40,13 +44,15 @@ fi
 
 case $1 in
 plan)
-  aws_region="$2"
+  aws_region=$2
+
   detect_cheapest
 
   TF_VAR_aws_vpc=$vpc_id \
   TF_VAR_aws_subnet=$subnet_id \
   TF_VAR_aws_region=$aws_region \
-  TF_VAR_parsec_authcode=$3 \
+  TF_VAR_parsec_server_key=$3 \
+  TF_VAR_spot_bid=$spot_bid \
   terraform plan
 
   echo "To proceed, run \"parsecadm apply <aws region> <parsec token>\""
@@ -59,14 +65,16 @@ apply)
   TF_VAR_aws_vpc=$vpc_id \
   TF_VAR_aws_subnet=$subnet_id \
   TF_VAR_aws_region=$aws_region \
-  TF_VAR_parsec_authcode=$3 \
+  TF_VAR_parsec_server_key=$3 \
+  TF_VAR_spot_bid=$spot_bid \
   terraform apply
   ;;
 destroy)
   TF_VAR_aws_vpc="$(terraform output aws_vpc)" \
   TF_VAR_aws_subnet="$(terraform output aws_subnet)" \
   TF_VAR_aws_region="$(terraform output aws_region)" \
-  TF_VAR_parsec_authcode="" \
+  TF_VAR_parsec_server_key="" \
+  TF_VAR_spot_bid="" \
   terraform destroy -force
   ;;
 help)

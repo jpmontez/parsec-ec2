@@ -1,6 +1,6 @@
 # Variables
 
-variable "parsec_authcode" {
+variable "parsec_server_key" {
   type = "string"
 }
 
@@ -16,6 +16,10 @@ variable "aws_subnet" {
   type = "string"
 }
 
+variable "spot_bid" {
+  type = "string"
+}
+
 # Template
 
 provider "aws" {
@@ -26,7 +30,7 @@ data "aws_ami" "parsec" {
   most_recent = true
   filter {
     name = "name"
-    values = ["ParsecRun-3"]
+    values = ["parsec-g3-ws2016-9"]
   }
 }
 
@@ -82,15 +86,15 @@ data "template_file" "user_data" {
     template = "${file("user_data.tmpl")}"
 
     vars {
-        authcode = "${var.parsec_authcode}"
+        server_key = "${var.parsec_server_key}"
     }
 }
 
 resource "aws_spot_instance_request" "parsec" {
-    spot_price = "0.7"
+    spot_price = "${var.spot_bid}"
     ami = "${data.aws_ami.parsec.id}"
     subnet_id = "${var.aws_subnet}"
-    instance_type = "g2.2xlarge"
+    instance_type = "g3.4xlarge"
 
     tags {
         Name = "ParsecServer"
