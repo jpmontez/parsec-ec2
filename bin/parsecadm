@@ -77,6 +77,11 @@ destroy)
   TF_VAR_spot_bid="" \
   terraform destroy -force
   ;;
+price)
+  aws_region=$2
+  detect_cheapest
+  echo "To proceed, run \"parsecadm apply <aws region> <parsec token>\""
+  ;;
 help)
     cat <<EOF
 Parsec ADM - Automated AWS deployments for Parsec(Unofficial) that automatically find the lowest price in your region.
