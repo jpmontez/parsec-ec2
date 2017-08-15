@@ -24,6 +24,16 @@ func getVpcId(svc *ec2.EC2) (string, error) {
 		return "", err
 	}
 
+	if len(vpc.Vpcs) < 1 {
+		fmt.Println(`
+You have at some point manually deleted the default VPC created by AWS for this region.
+parsec-ec2 will not function for this region until a default VPC is recreated for it.
+You can still try to launch Parsec EC2 instances in other regions that have retained
+their default VPC.
+`)
+		os.Exit(0)
+	}
+
 	return *vpc.Vpcs[0].VpcId, nil
 }
 
