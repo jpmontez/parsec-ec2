@@ -131,3 +131,7 @@ output "aws_subnet" {
 output "aws_vpc" {
   value = "${var.vpc}"
 }
+
+output "spot_instance_id" {
+  value = "${aws_spot_instance_request.parsec.spot_instance_id}"
+}

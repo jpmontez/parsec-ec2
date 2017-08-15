@@ -35,13 +35,13 @@ Once installed, add `export PARSEC_EC2_SERVER_KEY=your_server_key` to your `.bas
 
 ## Usage
 ### init
-After installation, all users should run `parsec-ec2 init`.
+After an initial installation or upgrade, all users should run `parsec-ec2 init`.
 
 The init command will create the directory `$HOME/.parsec-ec2` and the required Terraform template and provisioning
 userdata files.
 
-This command should only need to be run once, but if a fresh copy of the files is needed, the `$HOME/.parsec-ec2`
-folder can be manually removed and the `init` command run again.
+If upgrading an existing installation, the `$HOME/.parsec-ec2` folder should be manually removed before running the `init`
+command run again.
 
 ### price
 The `price` command looks for the current highest spot price for the requested instance type in the requested region.

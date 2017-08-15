@@ -26,14 +26,14 @@ import (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "One-time setup command to be run after initial installation",
+	Short: "Initialisation command to be run after initial installs and subsequent upgrades",
 	Long: `
 Copies the terraform and Windows provisioning user data template to the
 $HOME/.parsec-ec2 directory and runs 'terraform init' to initialise all
 the things required by the terraform template.
 
-This command should only been to be run once. If there should be any need
-to run it again, the $HOME/.parsec-ec2 should be manually removed first.
+If upgrading an existing installation, the $HOME/.parsec-ec2 folder should
+be manually removed before running the init command run again.
 
 After running this command it is recommended to export the environment
 variable PARSEC_EC2_SERVER_KEY in your shell rc file so that it doesn't
