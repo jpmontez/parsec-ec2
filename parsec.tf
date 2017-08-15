@@ -4,26 +4,30 @@ variable "parsec_server_key" {
   type = "string"
 }
 
-variable "aws_region" {
+variable "region" {
   type = "string"
 }
 
-variable "aws_vpc" {
+variable "vpc" {
   type = "string"
 }
 
-variable "aws_subnet" {
+variable "subnet" {
   type = "string"
 }
 
-variable "spot_bid" {
+variable "user_bid" {
+  type = "string"
+}
+
+variable "instance_type" {
   type = "string"
 }
 
 # Template
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = "${var.region}"
 }
 
 data "aws_ami" "parsec" {
@@ -35,7 +39,7 @@ data "aws_ami" "parsec" {
 }
 
 resource "aws_security_group" "parsec" {
-  vpc_id = "${var.aws_vpc}"
+  vpc_id = "${var.vpc}"
   name = "parsec"
   description = "Allow inbound Parsec traffic and all outbound."
 
@@ -91,10 +95,10 @@ data "template_file" "user_data" {
 }
 
 resource "aws_spot_instance_request" "parsec" {
-    spot_price = "${var.spot_bid}"
+    spot_price = "${var.user_bid}"
     ami = "${data.aws_ami.parsec.id}"
-    subnet_id = "${var.aws_subnet}"
-    instance_type = "g3.4xlarge"
+    subnet_id = "${var.subnet}"
+    instance_type = "${var.instance_type}"
 
     tags {
         Name = "ParsecServer"
@@ -117,13 +121,13 @@ resource "aws_spot_instance_request" "parsec" {
 }
 
 output "aws_region" {
-  value = "${var.aws_region}"
+  value = "${var.region}"
 }
 
 output "aws_subnet" {
-  value = "${var.aws_subnet}"
+  value = "${var.subnet}"
 }
 
 output "aws_vpc" {
-  value = "${var.aws_vpc}"
+  value = "${var.vpc}"
 }
