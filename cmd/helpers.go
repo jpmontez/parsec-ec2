@@ -74,8 +74,8 @@ func getSpotPrice(svc *ec2.EC2, instanceType string) (ec2.SpotPrice, error) {
 	}
 
 	if len(result.SpotPriceHistory) == 0 {
-		fmt.Printf("\nCould not get the highest spot price for instance type '%s'\n"+
-			"in the region '%s'. Either this instance type may not yet be available\n"+
+		fmt.Printf("\nCould not get the highest spot price for instance type '%s' in the \n"+
+			"region '%s'. Either this instance type may not yet be available\n"+
 			"in that region, or the instance type id given may contain a typo.\n", instanceType, awsRegion)
 		os.Exit(0)
 	}
