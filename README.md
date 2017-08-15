@@ -92,6 +92,18 @@ parsec-ec2 start \
 --plan
 ```
 
+### status
+The `status` command queries the launched instance and gets the current initialisation status.
+
+Once an instance is reporting a status of initialised, it may still take some time for the instance to show up in the
+Parsec desktop application. This is because time is still required for the provisioning script to run on the instance, 
+which is what will allow the Parsec application to launch and log in with the provided Parsec server key.
+
+Example:
+```
+parsec-ec2 status
+```
+
 ### stop
 The `stop` command stops a Parsec EC2 instance created using the `start` command. Under the hood this command runs 
 `terraform destroy`, with removes all AWS resources that are identified for creation in the terraform template.
@@ -103,7 +115,6 @@ receive prompts for variable values, but these can all be left blank with the ex
 can be set to the region the instances were started in.
 
 Example:
-
 ```
 parsec-ec2 stop
 ```

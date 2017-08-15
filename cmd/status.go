@@ -34,10 +34,10 @@ var statusCmd = &cobra.Command{
 Queries the launched instance and gets the current initialisation status.
 
 Once an instance is reporting a status of initialised, it may still take
-some time for the instance to show up in the Parsec desktop application
-as time is still required for the provisioning script to run on instance
-which is what will allow the Parsec application to launch and log in with
-the provided Parsec server key.
+some time for the instance to show up in the Parsec desktop application.
+This is because time is still required for the provisioning script to run
+on the instance, which is what will allow the Parsec application to launch
+and log in with the provided Parsec server key.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		currentSessionFile := fmt.Sprintf("%s/currentSession.json", appFolder)
@@ -127,14 +127,4 @@ visible on the Parsec desktop application.`)
 
 func init() {
 	RootCmd.AddCommand(statusCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// statusCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// statusCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
