@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Jade Iqbal <jadeiqbal@fastmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,33 +15,37 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/aws"
-	"encoding/json"
+	"github.com/spf13/cobra"
 )
 
 // statusCmd represents the status command
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Get the initialisation status of a launched EC2 instance",
+	Long: `
+Queries the launched instance and gets the current initialisation status.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Once an instance is reporting a status of initialised, it may still take
+some time for the instance to show up in the Parsec desktop application
+as time is still required for the provisioning script to run on instance
+which is what will allow the Parsec application to launch and log in with
+the provided Parsec server key.
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		currentSessionFile := fmt.Sprintf("%s/currentSession.json", appFolder)
 
 		bytes, err := ioutil.ReadFile(currentSessionFile)
 		if err != nil {
 			fmt.Println(`
-You have no sessions currently running.`)
+There are no sessions currently running.`)
 			os.Exit(0)
 		}
 
@@ -62,13 +66,62 @@ You have no sessions currently running.`)
 			Region: aws.String(currentSessionVars.AwsRegion),
 		})
 
-		currentInstance := []*string{&""}
+		refresh := constructTerraformCommand(currentSessionVars, []string{"refresh"})
 
-		describeInstanceStatusInput := ec2.DescribeInstanceStatusInput{
-			InstanceIds: currentInstance,
+		err = executeTerraformCommandAndSwallowOutput(refresh)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
-		svc.DescribeInstanceStatus(&describeInstanceStatusInput)
+		output := constructTerraformCommand(currentSessionVars, []string{"output", "spot_instance_id"})
+
+		spotInstanceId, err := executeTerraformCommandAndReturnOutput(output)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if len(spotInstanceId) < 1 {
+			fmt.Println(`
+The spot instance request has not yet been filled.`)
+			os.Exit(0)
+		}
+
+		instanceIds := []*string{&spotInstanceId}
+
+		describeInstanceStatusInput := ec2.DescribeInstanceStatusInput{
+			InstanceIds: instanceIds,
+		}
+
+		describeInstanceStatusOutput, err := svc.DescribeInstanceStatus(&describeInstanceStatusInput)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		instanceStatuses := describeInstanceStatusOutput.InstanceStatuses
+
+		if len(instanceStatuses) < 1 {
+			fmt.Println(`
+The spot instance request has been filled but initialisation status is
+not yet available.`)
+			os.Exit(0)
+		}
+
+		instanceStatus := instanceStatuses[0].InstanceStatus.Status
+
+		if *instanceStatus == "ok" {
+			fmt.Println(`
+The spot instance has finished initialising and should either already or
+very shortly be visible on the Parsec desktop application.`)
+			os.Exit(0)
+		} else {
+			fmt.Println(`
+The spot instance has not yet finished initialising. It will not yet be
+visible on the Parsec desktop application.`)
+			os.Exit(0)
+		}
 	},
 }
 

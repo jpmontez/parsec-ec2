@@ -120,15 +120,15 @@ resource "aws_spot_instance_request" "parsec" {
     associate_public_ip_address = true
 }
 
-output "aws_region" {
+output "region" {
   value = "${var.region}"
 }
 
-output "aws_subnet" {
+output "subnet_id" {
   value = "${var.subnet}"
 }
 
-output "aws_vpc" {
+output "vpc_id" {
   value = "${var.vpc}"
 }
 

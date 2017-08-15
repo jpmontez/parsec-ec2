@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"strings"
 )
 
 func getVpcId(svc *ec2.EC2) (string, error) {
@@ -170,6 +171,44 @@ func constructTerraformCommand(vars TfVars, args []string) *exec.Cmd {
 	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_parsec_server_key=%s", vars.ParsecServerKey))
 
 	return command
+}
+
+func executeTerraformCommandAndSwallowOutput(command *exec.Cmd) error {
+	err := command.Start()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func executeTerraformCommandAndReturnOutput(command *exec.Cmd) (string, error) {
+	initOut, err := command.StdoutPipe()
+	if err != nil {
+		return "", err
+	}
+
+	initErr, err := command.StderrPipe()
+	if err != nil {
+		return "", err
+	}
+
+	err = command.Start()
+	if err != nil {
+		return "", err
+	}
+
+	stdOutput, err := ioutil.ReadAll(initOut)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = ioutil.ReadAll(initErr)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(stdOutput)), nil
 }
 
 func executeTerraformCommandAndPrintOutput(command *exec.Cmd) error {
