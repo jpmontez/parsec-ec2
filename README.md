@@ -44,17 +44,28 @@ This command should only need to be run once, but if a fresh copy of the files i
 folder can be manually removed and the `init` command run again.
 
 ### price
-The `price` command looks for the current cheapest spot price for the requested instance type in the requested region
-and returns the price along with the availability zone in the requested region where the cheapest price was found.
+The `price` command look for the current cheapest spot price for the requested instance type
+in the requested region and returns the price along with the availability
+zone in the requested region where the cheapest price was found.
+
+Alternatively, with the `--highest-price` flag, the highest spot price in
+the region will be found instead of the lowest price.
 
 The `--region` and `--instance-type` flags are required.
 
-Example:
+Examples:
 ```
 $ parsec-ec2 price --region eu-west-1 --instance-type g2.2xlarge
 
 >> 'eu-west-1a' is the least expensive availability zone in the region 
 >> 'eu-west-1' for 'g2.2xlarge' instances with a spot price of $0.105800/hour.
+```
+
+```
+$ parsec-ec2 price --region eu-west-1 --instance-type g2.2xlarge --highest-price
+
+>> 'eu-west-1a' is the most expensive availability zone in the region 
+>> 'eu-west-1' for 'g2.2xlarge' instances with a spot price of $7.670000/hour.
 ```
 
 ### start

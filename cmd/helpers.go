@@ -54,7 +54,7 @@ func getSubnetId(svc *ec2.EC2, availabilityZone string) (string, error) {
 	return *result.Subnets[0].SubnetId, nil
 }
 
-func getCheapestSpotPrice(svc *ec2.EC2, instanceType string) (ec2.SpotPrice, error) {
+func getSpotPrice(svc *ec2.EC2, instanceType string, highestPrice bool) (ec2.SpotPrice, error) {
 	productDescription := "Windows"
 
 	instanceTypes := []*string{&instanceType}
@@ -79,8 +79,11 @@ func getCheapestSpotPrice(svc *ec2.EC2, instanceType string) (ec2.SpotPrice, err
 			"in that region, or the instance type id given may contain a typo.\n", instanceType, awsRegion)
 		os.Exit(0)
 	}
-
-	sort.Sort(SpotPriceHistory(result.SpotPriceHistory))
+	if highestPrice {
+		sort.Reverse(SpotPriceHistory(result.SpotPriceHistory))
+	} else {
+		sort.Sort(SpotPriceHistory(result.SpotPriceHistory))
+	}
 
 	return *result.SpotPriceHistory[0], nil
 }

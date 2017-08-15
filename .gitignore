@@ -23,7 +23,10 @@
 # User-specific stuff:
 .idea/**/workspace.xml
 .idea/**/tasks.xml
+.idea/**/vcs.xml
+.idea/**/modules.xml
 .idea/dictionaries
+.idea/parsec-ec2.iml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/

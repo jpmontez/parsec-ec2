@@ -78,7 +78,7 @@ Either add 'export PARSEC_EC2_SERVER_KEY=xxxxx' in your shell rc file , or pass 
 			os.Exit(1)
 		}
 
-		spotPrice, err := getCheapestSpotPrice(svc, instanceType)
+		spotPrice, err := getSpotPrice(svc, instanceType, false)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
