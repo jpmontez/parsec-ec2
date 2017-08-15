@@ -17,6 +17,7 @@ requests are very much encouraged and welcome.
 * [Terraform](https://github.com/hashicorp/terraform)
 * [aws-cli](https://github.com/aws/aws-cli)
 * [Go](https://github.com/golang/go)
+* [Parsec Client](https://parsec.tv/downloads)
 
 This has been developed with MacOS in mind, but should also work on Linux.
 
@@ -31,7 +32,21 @@ Make sure `$GOPATH` is set correctly that and that `$GOPATH/bin` is in your `$PA
 
 The `parsec-ec2` executable will be installed under the `$GOPATH/bin` directory.
 
-Once installed, add `export PARSEC_EC2_SERVER_KEY=your_server_key` to your `.bashrc` or `.zshrc` or `.${shell}rc` file.
+Once installed, add `export PARSEC_EC2_SERVER_KEY=your_server_key` to your shell rc file.
+
+You can find your server key by going to your [Parsec account page](https://parsec.tv/account) and looking at the
+'Your Configuration Settings for Self Hosting in the Cloud' section at the bottom. You may first have to click the
+'Generate Config Settings' button. You should eventually see something like the following:
+
+```
+network_server_start_port=8000
+app_host=1
+server_key=xxxxx
+app_check_user_data=1
+app_first_run=0
+```
+
+The `server_key` value is the one that you should assign to the `PARSEC_EC2_SERVER_KEY` environment variable.
 
 ## Usage
 ### init
