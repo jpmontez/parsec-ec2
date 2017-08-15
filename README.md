@@ -21,7 +21,7 @@ requests are very much encouraged and welcome.
 This has been developed with MacOS in mind, but should also work on Linux.
 
 ## Installation
-The latest version of bfm can be installed using `go get`.
+The latest version of `parsec-ec2` can be installed using `go get`.
 
 ```
 go get -u github.com/LGUG2Z/parsec-ec2
