@@ -38,7 +38,9 @@ This command depends on session information that is created by the start
 command and stored in $HOME/.parsec-ec2/currentSession.json, so if this
 has been manually modified or removed after running the start command,
 the stop command will not execute. In this situation it is still possible
-to manually run 'terraform destroy'.
+to manually run 'terraform destroy'. You will receive prompts for variable
+values, but these can all be left blank with the exception of the region
+variable, which can be set to the region the instances were started in.
 
 Example:
 

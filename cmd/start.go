@@ -36,10 +36,11 @@ Sends a spot request for the requested EC2 instance type in the specified region
 If PARSEC_EC2_SERVER_KEY has not been exported in the shell rc file, it must be
 passed to the command using the --server-key flag.
 
-The amount to bid above the current lowest spot price for the instance is
-specified using the --bid flag, so if the current lowest spot price is $0.20,
+The amount to bid above the current highest spot price for the instance is
+specified using the --bid flag, so if the current highest spot price is $0.20,
 running the command with --bid 0.10 will send a spot request with a bid price
-of $0.30.
+of $0.30. Alternatively this flag can be left blank if you don't want to bid
+higher than the current highest bid price.
 
 If the --plan flag is used, the spot request will not be sent and instead the
 'terraform plan' command will be run which will output to the console the details
@@ -78,7 +79,7 @@ Either add 'export PARSEC_EC2_SERVER_KEY=xxxxx' in your shell rc file , or pass 
 			os.Exit(1)
 		}
 
-		spotPrice, err := getSpotPrice(svc, instanceType, false)
+		spotPrice, err := getSpotPrice(svc, instanceType)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

@@ -44,12 +44,7 @@ This command should only need to be run once, but if a fresh copy of the files i
 folder can be manually removed and the `init` command run again.
 
 ### price
-The `price` command look for the current cheapest spot price for the requested instance type
-in the requested region and returns the price along with the availability
-zone in the requested region where the cheapest price was found.
-
-Alternatively, with the `--highest-price` flag, the highest spot price in
-the region will be found instead of the lowest price.
+The `price` command looks for the current highest spot price for the requested instance type in the requested region.
 
 The `--region` and `--instance-type` flags are required.
 
@@ -57,24 +52,17 @@ Examples:
 ```
 $ parsec-ec2 price --region eu-west-1 --instance-type g2.2xlarge
 
->> 'eu-west-1a' is the least expensive availability zone in the region 
->> 'eu-west-1' for 'g2.2xlarge' instances with a spot price of $0.105800/hour.
-```
-
-```
-$ parsec-ec2 price --region eu-west-1 --instance-type g2.2xlarge --highest-price
-
->> 'eu-west-1a' is the most expensive availability zone in the region 
->> 'eu-west-1' for 'g2.2xlarge' instances with a spot price of $7.670000/hour.
+>> The highest spot price in region eu-west-1 for g2.2xlarge instances is currently $0.87/hour.
 ```
 
 ### start
-The `start` command sends a spot request for the requested EC2 instance type in the specified region.
-If `PARSEC_EC2_SERVER_KEY` has not been exported in the shell rc file, it must be passed to the command using the `--server-key` flag.
+The `start` command makes a spot request for the requested EC2 instance type in the specified region. If
+`PARSEC_EC2_SERVER_KEY` has not been exported in the shell rc file, it must be passed to the command using the 
+`--server-key` flag.
 
-The amount to bid above the current lowest spot price for the instance is specified using the `--bid` flag, so if the
-current lowest spot price is $0.20, running the command with `--bid 0.10` will send a spot request with a bid price
-of $0.30.
+The amount to bid above the current highest spot price for the instance is specified using the `--bid` flag, so if the
+current highest spot price is $0.20, running the command with `--bid 0.10` will make a spot request with a bid price
+of $0.30. Alternatively this flag can be left blank if you don't want to bid higher than the current highest bid price.
 
 If the `--plan` flag is used, the spot request will not be sent and instead the `terraform plan` command will be run
 which will output to the terminal the details of any AWS resources that will be created by running the `start` command.
@@ -105,12 +93,14 @@ parsec-ec2 start \
 ```
 
 ### stop
-The `stop` command stops a Parsec EC2 instance created using the start command. Under the hood this command runs 
+The `stop` command stops a Parsec EC2 instance created using the `start` command. Under the hood this command runs 
 `terraform destroy`, with removes all AWS resources that are identified for creation in the terraform template.
 
-This command depends on session information that is created by the start command and stored in `$HOME/.parsec-ec2/currentSession.json`,
-so if this has been manually modified or removed after running the start command, the stop command will not execute. In
-this situation it is still possible to manually run `terraform destroy` in the `$HOME/.parsec-ec2` directory.
+This command depends on session information that is created by the `start` command and stored in `$HOME/.parsec-ec2/currentSession.json`,
+so if this has been manually modified or removed after running the `start` command, the `stop` command will not execute. In
+this situation it is still possible to manually run `terraform destroy` in the `$HOME/.parsec-ec2` directory. You will 
+receive prompts for variable values, but these can all be left blank with the exception of the region variable, which
+can be set to the region the instances were started in.
 
 Example:
 

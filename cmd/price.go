@@ -30,17 +30,12 @@ var priceCmd = &cobra.Command{
 	Use:   "price",
 	Short: "Get the lowest or highest spot price for an instance type in a given region",
 	Long: `
-Looks for the current cheapest spot price for the requested instance type
-in the requested region and returns the price along with the availability
-zone in the requested region where the cheapest price was found.
-
-Alternatively, with the --highest-price flag, the highest spot price in
-the region will be found instead of the lowest price.
+Looks for the current highest spot price for the requested instance type
+in the requested region.
 
 Examples:
 
 parsec-ec2 price --region eu-west-1 --instance-type g2.2xlarge
-parsec-ec2 price --region eu-west-2 --instance-type g3.4xlarge --highest-price
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if !isValidAwsRegion(validAwsRegions, awsRegion) {
@@ -57,30 +52,18 @@ parsec-ec2 price --region eu-west-2 --instance-type g3.4xlarge --highest-price
 			Region: aws.String(awsRegion),
 		})
 
-		spotPrice, err := getSpotPrice(ec2Client, instanceType, highestPrice)
+		spotPrice, err := getSpotPrice(ec2Client, instanceType)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
 		dollarPrice := *spotPrice.SpotPrice
-		availabilityZone := *spotPrice.AvailabilityZone
 
-		if highestPrice {
-			fmt.Printf("\n'%s' is the most expensive availability zone in "+
-				"the region '%s' for '%s' instances with a highest spot price of $%s/hour.\n",
-				availabilityZone, awsRegion, instanceType, dollarPrice)
-		} else {
-			fmt.Printf("\n'%s' is the least expensive availability zone in "+
-				"the region '%s' for '%s' instances with a lowest spot price of $%s/hour.\n",
-				availabilityZone, awsRegion, instanceType, dollarPrice)
-		}
+		fmt.Printf("\nThe highest spot price in region %s for %s instances is currently $%s/hour.\n", awsRegion, instanceType, dollarPrice)
 	},
 }
 
-var highestPrice bool
-
 func init() {
 	RootCmd.AddCommand(priceCmd)
-	priceCmd.Flags().BoolVar(&highestPrice,"highest-price", false, "find the highest current spot bid")
 }
