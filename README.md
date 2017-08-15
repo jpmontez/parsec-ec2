@@ -8,7 +8,7 @@ and the [Parsec team](https://parsec.tv/), I started working on this project to 
 functionality I was looking for that I had not yet seen implemented anywhere else:
 
 * To be able to easily switch between instance types without manually editing files
-* To be able to arbitrarily specify a spot bid price per session relative to the current lowest spot price in a given availability zone
+* To be able to arbitrarily specify a spot bid price per session relative to the current highest spot price in a given availability zone
 
 This is very much a work in progress and my first attempt at writing a non-trivial application in Go. Improvements and pull
 requests are very much encouraged and welcome.
