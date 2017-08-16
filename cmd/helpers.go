@@ -66,10 +66,8 @@ func getSubnetId(svc *ec2.EC2, availabilityZone string) (string, error) {
 }
 
 func getSpotPrice(svc *ec2.EC2, instanceType string) (ec2.SpotPrice, error) {
-	productDescription := "Windows"
-
 	instanceTypes := []*string{&instanceType}
-	productDescriptions := []*string{&productDescription}
+	productDescriptions := []*string{&Windows}
 	startTime := time.Now().AddDate(0, 0, -1)
 	endTime := time.Now()
 
@@ -162,13 +160,13 @@ func writeSessionVars(vars TfVars) error {
 		return err
 	}
 
-	filePath := fmt.Sprintf("%s/currentSession.json", appFolder)
+	filePath := fmt.Sprintf("%s/%s", appFolder, CurrentSession)
 
 	return ioutil.WriteFile(filePath, bytes, 0644)
 }
 
 func constructTerraformCommand(vars TfVars, args []string) *exec.Cmd {
-	command := exec.Command("terraform", args...)
+	command := exec.Command(Terraform, args...)
 
 	command.Dir = appFolder
 

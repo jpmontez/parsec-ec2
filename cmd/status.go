@@ -40,7 +40,7 @@ on the instance, which is what will allow the Parsec application to launch
 and log in with the provided Parsec server key.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		currentSessionFile := fmt.Sprintf("%s/currentSession.json", appFolder)
+		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, CurrentSession)
 
 		bytes, err := ioutil.ReadFile(currentSessionFile)
 		if err != nil {
@@ -66,7 +66,7 @@ There are no sessions currently running.`)
 			Region: aws.String(currentSessionVars.AwsRegion),
 		})
 
-		refresh := constructTerraformCommand(currentSessionVars, []string{"refresh"})
+		refresh := constructTerraformCommand(currentSessionVars, []string{Refresh})
 
 		err = executeTerraformCommandAndSwallowOutput(refresh)
 		if err != nil {
@@ -74,7 +74,7 @@ There are no sessions currently running.`)
 			os.Exit(1)
 		}
 
-		output := constructTerraformCommand(currentSessionVars, []string{"output", "spot_instance_id"})
+		output := constructTerraformCommand(currentSessionVars, []string{Output, SpotInstanceId})
 
 		spotInstanceId, err := executeTerraformCommandAndReturnOutput(output)
 		if err != nil {
@@ -111,7 +111,7 @@ not yet available.`)
 
 		instanceStatus := instanceStatuses[0].InstanceStatus.Status
 
-		if *instanceStatus == "ok" {
+		if *instanceStatus == Ok {
 			fmt.Println(`
 The spot instance has finished initialising and should either already or
 very shortly be visible on the Parsec desktop application.`)

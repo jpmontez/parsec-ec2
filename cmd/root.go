@@ -62,7 +62,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVarP(&awsRegion, "region", "r", "", "aws region")
-	RootCmd.PersistentFlags().StringVarP(&instanceType, "instance-type", "i", "", "aws instance type")
+	RootCmd.PersistentFlags().StringVarP(&instanceType, "instance-type", "i", "", "ec2 instance type")
 }
 
 // initConfig reads in config file and ENV variables if set.

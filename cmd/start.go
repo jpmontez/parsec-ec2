@@ -111,9 +111,9 @@ Either add 'export PARSEC_EC2_SERVER_KEY=xxxxx' in your shell rc file , or pass 
 		var start *exec.Cmd
 
 		if plan {
-			start = constructTerraformCommand(currentSessionVars, []string{"plan"})
+			start = constructTerraformCommand(currentSessionVars, []string{Plan})
 		} else {
-			start = constructTerraformCommand(currentSessionVars, []string{"apply"})
+			start = constructTerraformCommand(currentSessionVars, []string{Apply})
 		}
 
 		err = executeTerraformCommandAndPrintOutput(start)

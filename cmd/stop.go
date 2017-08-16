@@ -28,7 +28,7 @@ import (
 // stopCmd represents the stop command
 var stopCmd = &cobra.Command{
 	Use:   "stop",
-	Short: "Stop a running EC2 instance",
+	Short: "Stop a running Parsec EC2 instance",
 	Long: `
 Stops a Parsec EC2 instance created using the start command. Under the
 hood this command runs 'terraform destroy', with removes all AWS resources
@@ -47,7 +47,7 @@ Example:
 parsec-ec2 stop
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		currentSessionFile := fmt.Sprintf("%s/currentSession.json", appFolder)
+		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, CurrentSession)
 
 		bytes, err := ioutil.ReadFile(currentSessionFile)
 		if err != nil {
@@ -74,7 +74,7 @@ refer to the EC2 dashboard on the AWS website.`)
 			os.Exit(1)
 		}
 
-		destroy := constructTerraformCommand(currentSessionVars, []string{"destroy", "-force"})
+		destroy := constructTerraformCommand(currentSessionVars, []string{Destroy, Force})
 
 		err = executeTerraformCommandAndPrintOutput(destroy)
 		if err != nil {
