@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-func getVpcId(svc *ec2.EC2) (string, error) {
+func getVpcID(svc *ec2.EC2) (string, error) {
 	vpc, err := svc.DescribeVpcs(&ec2.DescribeVpcsInput{})
 
 	if err != nil {
@@ -37,7 +37,7 @@ their default VPC.
 	return *vpc.Vpcs[0].VpcId, nil
 }
 
-func getSubnetId(svc *ec2.EC2, availabilityZone string) (string, error) {
+func getSubnetID(svc *ec2.EC2, availabilityZone string) (string, error) {
 	values := []*string{&availabilityZone}
 
 	filter := ec2.Filter{
@@ -67,7 +67,7 @@ func getSubnetId(svc *ec2.EC2, availabilityZone string) (string, error) {
 
 func getSpotPrice(svc *ec2.EC2, instanceType string) (ec2.SpotPrice, error) {
 	instanceTypes := []*string{&instanceType}
-	productDescriptions := []*string{&Windows}
+	productDescriptions := []*string{&windows}
 	startTime := time.Now().AddDate(0, 0, -1)
 	endTime := time.Now()
 
@@ -88,18 +88,18 @@ func getSpotPrice(svc *ec2.EC2, instanceType string) (ec2.SpotPrice, error) {
 			"in that region, or the instance type id given may contain a typo.\n", instanceType, awsRegion)
 		os.Exit(0)
 	}
-	sort.Reverse(SpotPriceHistory(result.SpotPriceHistory))
+	sort.Reverse(spotPriceHistory(result.SpotPriceHistory))
 
 	return *result.SpotPriceHistory[0], nil
 }
 
-type SpotPriceHistory []*ec2.SpotPrice
+type spotPriceHistory []*ec2.SpotPrice
 
-func (spotPriceHistory SpotPriceHistory) Len() int {
+func (spotPriceHistory spotPriceHistory) Len() int {
 	return len(spotPriceHistory)
 }
 
-func (spotPriceHistory SpotPriceHistory) Less(i, j int) bool {
+func (spotPriceHistory spotPriceHistory) Less(i, j int) bool {
 	price1, err := strconv.ParseFloat(*spotPriceHistory[i].SpotPrice, 32)
 	if err != nil {
 		panic(err)
@@ -111,7 +111,7 @@ func (spotPriceHistory SpotPriceHistory) Less(i, j int) bool {
 	return price1 < price2
 }
 
-func (spotPriceHistory SpotPriceHistory) Swap(i, j int) {
+func (spotPriceHistory spotPriceHistory) Swap(i, j int) {
 	spotPriceHistory[i], spotPriceHistory[j] = spotPriceHistory[j], spotPriceHistory[i]
 }
 
@@ -141,9 +141,9 @@ func copyFile(originalFilePath, destinationFileName, destinationFolder string) e
 	return nil
 }
 
-type TfVars struct {
-	VpcId           string `json:"vpcId"`
-	SubnetId        string `json:"subnetId"`
+type tfVars struct {
+	VpcID           string `json:"vpcId"`
+	SubnetID        string `json:"subnetId"`
 	AwsRegion       string `json:"awsRegion"`
 	UserBid         string `json:"userBid"`
 	Ec2InstanceType string `json:"instanceType"`
@@ -154,25 +154,25 @@ func hasParsecServerKey(parsecServerKey string) bool {
 	return len(parsecServerKey) > 0
 }
 
-func writeSessionVars(vars TfVars) error {
+func writeSessionVars(vars tfVars) error {
 	bytes, err := json.Marshal(vars)
 	if err != nil {
 		return err
 	}
 
-	filePath := fmt.Sprintf("%s/%s", appFolder, CurrentSession)
+	filePath := fmt.Sprintf("%s/%s", appFolder, currentSession)
 
 	return ioutil.WriteFile(filePath, bytes, 0644)
 }
 
-func constructTerraformCommand(vars TfVars, args []string) *exec.Cmd {
-	command := exec.Command(Terraform, args...)
+func constructTerraformCommand(vars tfVars, args []string) *exec.Cmd {
+	command := exec.Command(terraform, args...)
 
 	command.Dir = appFolder
 
 	command.Env = os.Environ()
-	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_vpc=%s", vars.VpcId))
-	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_subnet=%s", vars.SubnetId))
+	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_vpc=%s", vars.VpcID))
+	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_subnet=%s", vars.SubnetID))
 	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_region=%s", vars.AwsRegion))
 	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_user_bid=%s", vars.UserBid))
 	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_instance_type=%s", vars.Ec2InstanceType))

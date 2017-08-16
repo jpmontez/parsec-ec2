@@ -1,18 +1,29 @@
 package cmd
 
-var (
-	Windows          = "Windows"
-	CurrentSession   = "currentSession.json"
-	Terraform        = "terraform"
-	ParsecTemplate   = "parsec.tf"
-	UserDataTemplate = "user_data.tmpl"
-	Init             = "init"
-	Plan             = "plan"
-	Apply            = "apply"
-	Destroy          = "destroy"
-	Force            = "-force"
-	Refresh          = "refresh"
-	Output           = "output"
-	SpotInstanceId   = "spot_instance_id"
-	Ok               = "ok"
+
+var tfCommands = struct {
+	apply string
+	destroy string
+	init string
+	output string
+	plan string
+	refresh string
+}{
+	"apply",
+	"destroy",
+	"init",
+	"output",
+	"plan",
+	"refresh",
+}
+
+const (
+	windows          = "Windows"
+	currentSession   = "currentSession.json"
+	terraform        = "terraform"
+	parsecTemplate   = "parsec.tf"
+	userDataTemplate = "user_data.tmpl"
+	force            = "-force"
+	spotInstanceID   = "spot_instance_id"
+	ok               = "ok"
 )

@@ -40,7 +40,7 @@ on the instance, which is what will allow the Parsec application to launch
 and log in with the provided Parsec server key.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, CurrentSession)
+		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, currentSession)
 
 		bytes, err := ioutil.ReadFile(currentSessionFile)
 		if err != nil {
@@ -49,7 +49,7 @@ There are no sessions currently running.`)
 			os.Exit(0)
 		}
 
-		var currentSessionVars TfVars
+		var currentSessionVars tfVars
 
 		err = json.Unmarshal(bytes, &currentSessionVars)
 		if err != nil {
@@ -66,7 +66,7 @@ There are no sessions currently running.`)
 			Region: aws.String(currentSessionVars.AwsRegion),
 		})
 
-		refresh := constructTerraformCommand(currentSessionVars, []string{Refresh})
+		refresh := constructTerraformCommand(currentSessionVars, []string{tfCommands.refresh})
 
 		err = executeTerraformCommandAndSwallowOutput(refresh)
 		if err != nil {
@@ -74,21 +74,21 @@ There are no sessions currently running.`)
 			os.Exit(1)
 		}
 
-		output := constructTerraformCommand(currentSessionVars, []string{Output, SpotInstanceId})
+		output := constructTerraformCommand(currentSessionVars, []string{tfCommands.output, spotInstanceID})
 
-		spotInstanceId, err := executeTerraformCommandAndReturnOutput(output)
+		spotInstanceID, err := executeTerraformCommandAndReturnOutput(output)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		if len(spotInstanceId) < 1 {
+		if len(spotInstanceID) < 1 {
 			fmt.Println(`
 The spot instance request has not yet been filled.`)
 			os.Exit(0)
 		}
 
-		instanceIds := []*string{&spotInstanceId}
+		instanceIds := []*string{&spotInstanceID}
 
 		describeInstanceStatusInput := ec2.DescribeInstanceStatusInput{
 			InstanceIds: instanceIds,
@@ -111,7 +111,7 @@ not yet available.`)
 
 		instanceStatus := instanceStatuses[0].InstanceStatus.Status
 
-		if *instanceStatus == Ok {
+		if *instanceStatus == ok {
 			fmt.Println(`
 The spot instance has finished initialising and should either already or
 very shortly be visible on the Parsec desktop application.`)

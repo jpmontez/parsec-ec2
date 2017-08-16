@@ -47,7 +47,7 @@ Example:
 parsec-ec2 stop
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, CurrentSession)
+		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, currentSession)
 
 		bytes, err := ioutil.ReadFile(currentSessionFile)
 		if err != nil {
@@ -60,7 +60,7 @@ refer to the EC2 dashboard on the AWS website.`)
 			os.Exit(1)
 		}
 
-		var currentSessionVars TfVars
+		var currentSessionVars tfVars
 
 		err = json.Unmarshal(bytes, &currentSessionVars)
 		if err != nil {
@@ -68,15 +68,18 @@ refer to the EC2 dashboard on the AWS website.`)
 			os.Exit(1)
 		}
 
-		err = os.Remove(currentSessionFile)
+		destroy := constructTerraformCommand(currentSessionVars, []string{tfCommands.destroy, force})
+
+		// TODO: Make sure that there isn't a TFLOCK in the err output
+		err = executeTerraformCommandAndPrintOutput(destroy)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		destroy := constructTerraformCommand(currentSessionVars, []string{Destroy, Force})
-
-		err = executeTerraformCommandAndPrintOutput(destroy)
+		// TODO: Only remove the session data if there was no err output from destroy
+		// TODO: Alternatively, do away with the sessionFile and use tf output variables
+		err = os.Remove(currentSessionFile)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

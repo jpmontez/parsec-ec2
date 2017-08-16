@@ -40,11 +40,12 @@ variable PARSEC_EC2_SERVER_KEY in your shell rc file so that it doesn't
 need to be passed in manually every time the start command is run.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		terraformFilePath := fmt.Sprintf("%s/%s", projectFolder, ParsecTemplate)
-		userDataFilePath := fmt.Sprintf("%s/%s", projectFolder, UserDataTemplate)
+		terraformFilePath := fmt.Sprintf("%s/%s", projectFolder, parsecTemplate)
+		userDataFilePath := fmt.Sprintf("%s/%s", projectFolder, userDataTemplate)
 
 		fileInfo, _ := os.Stat(appFolder)
 
+		// TODO: If the folder already exists, copy over the existing files instead of crapping out
 		if fileInfo != nil {
 			fmt.Println(`
 The init command has already been run on this machine. If you wish to run
@@ -58,19 +59,19 @@ it again you must manually delete the $HOME/.parsec-ec2 folder first.`)
 			os.Exit(1)
 		}
 
-		err = copyFile(terraformFilePath, ParsecTemplate, appFolder)
+		err = copyFile(terraformFilePath, parsecTemplate, appFolder)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		err = copyFile(userDataFilePath, UserDataTemplate, appFolder)
+		err = copyFile(userDataFilePath, userDataTemplate, appFolder)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		init := exec.Command(Terraform, Init)
+		init := exec.Command(terraform, tfCommands.init)
 		init.Dir = appFolder
 
 		err = executeTerraformCommandAndPrintOutput(init)

@@ -73,7 +73,7 @@ Either add 'export PARSEC_EC2_SERVER_KEY=xxxxx' in your shell rc file , or pass 
 			Region: aws.String(awsRegion),
 		})
 
-		vpcId, err := getVpcId(svc)
+		vpcID, err := getVpcID(svc)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -88,15 +88,15 @@ Either add 'export PARSEC_EC2_SERVER_KEY=xxxxx' in your shell rc file , or pass 
 		userBid := calculateUserBid(*spotPrice.SpotPrice, bid)
 		availabilityZone := *spotPrice.AvailabilityZone
 
-		subnetId, err := getSubnetId(svc, availabilityZone)
+		subnetID, err := getSubnetID(svc, availabilityZone)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		currentSessionVars := TfVars{
-			SubnetId:        subnetId,
-			VpcId:           vpcId,
+		currentSessionVars := tfVars{
+			SubnetID:        subnetID,
+			VpcID:           vpcID,
 			AwsRegion:       awsRegion,
 			Ec2InstanceType: instanceType,
 			ParsecServerKey: parsecServerKey,
@@ -111,9 +111,9 @@ Either add 'export PARSEC_EC2_SERVER_KEY=xxxxx' in your shell rc file , or pass 
 		var start *exec.Cmd
 
 		if plan {
-			start = constructTerraformCommand(currentSessionVars, []string{Plan})
+			start = constructTerraformCommand(currentSessionVars, []string{tfCommands.plan})
 		} else {
-			start = constructTerraformCommand(currentSessionVars, []string{Apply})
+			start = constructTerraformCommand(currentSessionVars, []string{tfCommands.apply})
 		}
 
 		err = executeTerraformCommandAndPrintOutput(start)
