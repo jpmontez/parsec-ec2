@@ -1,6 +1,6 @@
 # Variables
 
-variable "parsec_server_key" {
+variable "server_key" {
   type = "string"
 }
 
@@ -8,15 +8,15 @@ variable "region" {
   type = "string"
 }
 
-variable "vpc" {
+variable "vpc_id" {
   type = "string"
 }
 
-variable "subnet" {
+variable "subnet_id" {
   type = "string"
 }
 
-variable "user_bid" {
+variable "spot_price" {
   type = "string"
 }
 
@@ -39,7 +39,7 @@ data "aws_ami" "parsec" {
 }
 
 resource "aws_security_group" "parsec" {
-  vpc_id = "${var.vpc}"
+  vpc_id = "${var.vpc_id}"
   name = "parsec"
   description = "Allow inbound Parsec traffic and all outbound."
 
@@ -90,14 +90,14 @@ data "template_file" "user_data" {
     template = "${file("user_data.tmpl")}"
 
     vars {
-        server_key = "${var.parsec_server_key}"
+        server_key = "${var.server_key}"
     }
 }
 
 resource "aws_spot_instance_request" "parsec" {
-    spot_price = "${var.user_bid}"
+    spot_price = "${var.spot_price}"
     ami = "${data.aws_ami.parsec.id}"
-    subnet_id = "${var.subnet}"
+    subnet_id = "${var.subnet_id}"
     instance_type = "${var.instance_type}"
 
     tags {
@@ -120,18 +120,34 @@ resource "aws_spot_instance_request" "parsec" {
     associate_public_ip_address = true
 }
 
+output "server_key" {
+  value = "${var.server_key}"
+}
+
 output "region" {
   value = "${var.region}"
 }
 
-output "subnet_id" {
-  value = "${var.subnet}"
+output "vpc_id" {
+  value = "${var.vpc_id}"
 }
 
-output "vpc_id" {
-  value = "${var.vpc}"
+output "subnet_id" {
+  value = "${var.subnet_id}"
+}
+
+output "spot_price" {
+  value = "${var.spot_price}"
+}
+
+output "instance_type" {
+  value = "${var.instance_type}"
 }
 
 output "spot_instance_id" {
   value = "${aws_spot_instance_request.parsec.spot_instance_id}"
 }
+
+//output "spot_bid_status" {
+//  value = "${aws_spot_instance_request.parsec.spot_bid_status}"
+//}
