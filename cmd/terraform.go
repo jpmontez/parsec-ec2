@@ -56,6 +56,7 @@ type TfOutputs struct {
 	} `json:"vpc_id"`
 }
 
+// TODO: Marshal this out as a toml file and write to terraform.tfvars
 func (v *TfVars) Write() error {
 	bytes, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
@@ -67,7 +68,7 @@ func (v *TfVars) Write() error {
 	return ioutil.WriteFile(filePath, bytes, 0644)
 }
 
-func (v *TfVars) Initialise(ec2Client *ec2.EC2, region, serverKey, instanceType string) error {
+func (v *TfVars) Calculate(ec2Client *ec2.EC2, region, serverKey, instanceType string) error {
 	vpcID, err := getVpcID(ec2Client)
 	if err != nil {
 		return err
@@ -96,26 +97,16 @@ func (v *TfVars) Initialise(ec2Client *ec2.EC2, region, serverKey, instanceType 
 	return nil
 }
 
-func (v *TfVars) UpdateFromOutputs() error {
+func (v *TfOutputs) Read() error {
 	o := tfCmd([]string{TfCmdOutput, TfFlagJSON})
 	output, err := executeReturn(o)
 	if err != nil {
 		return err
 	}
 
-	var outputs TfOutputs
-
-	if err := json.Unmarshal([]byte(output), &outputs); err != nil {
+	if err := json.Unmarshal(output, &v); err != nil {
 		return err
 	}
-
-	v.InstanceType = outputs.InstanceType.Value
-	v.Region = outputs.Region.Value
-	v.ServerKey = outputs.ServerKey.Value
-	v.SpotInstanceID = outputs.SpotInstanceID.Value
-	v.SpotPrice = outputs.SpotPrice.Value
-	v.SubnetID = outputs.SubnetID.Value
-	v.VpcID = outputs.VpcID.Value
 
 	return nil
 }

@@ -35,7 +35,7 @@ func (spotPriceHistory spotPriceHistory) Swap(i, j int) {
 
 func getSpotPrice(svc *ec2.EC2, instanceType string) (ec2.SpotPrice, error) {
 	instanceTypes := []*string{&instanceType}
-	productDescriptions := []*string{aws.String(windows)}
+	productDescriptions := []*string{aws.String(Windows)}
 	startTime := time.Now().AddDate(0, 0, -1)
 	endTime := time.Now()
 

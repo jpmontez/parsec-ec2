@@ -39,29 +39,12 @@ func Execute() {
 	}
 }
 
-var appFolder, awsRegion, cfgFile, goPath, homeFolder, instanceType, projectFolder string
-
-var validAwsRegions = []string{
-	"us-east-1",
-	"us-east-2",
-	"us-west-1",
-	"us-west-2",
-	"ca-central-1",
-	"eu-west-1",
-	"eu-central-1",
-	"eu-west-2",
-	"ap-northeast-1",
-	"ap-northeast-2",
-	"ap-southeast-1",
-	"ap-southeast-2",
-	"ap-south-1",
-	"sa-east-1",
-}
+var installPath, region, cfgFile, goPath, instanceType, projectPath string
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringVarP(&awsRegion, "region", "r", "", "aws region")
+	RootCmd.PersistentFlags().StringVarP(&region, "region", "r", "", "aws region")
 	RootCmd.PersistentFlags().StringVarP(&instanceType, "instance-type", "i", "", "ec2 instance type")
 }
 
@@ -78,19 +61,19 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		homeFolder = home
 		goPath = os.Getenv("GOPATH")
 
-		projectFolder = fmt.Sprintf("%s/src/github.com/lgug2z/parsec-ec2", goPath)
-		appFolder = fmt.Sprintf("%s/.parsec-ec2", homeFolder)
+		projectPath = fmt.Sprintf("%s/src/github.com/lgug2z/parsec-ec2", goPath)
+		installPath = fmt.Sprintf("%s/.parsec-ec2", home)
 
 		// Search config in home directory with name ".parsec-ec2" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".parsec-ec2")
 	}
+
 	viper.SetEnvPrefix("parsec_ec2")
 	viper.AutomaticEnv() // read in environment variables that match
-	parsecServerKey = viper.GetString("server_key")
+	serverKey = viper.GetString("server_key")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {

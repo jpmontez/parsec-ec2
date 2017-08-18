@@ -21,9 +21,6 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/spf13/cobra"
 )
 
@@ -32,15 +29,14 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a new Parsec EC2 instance",
 	Long: `
-Sends a spot request for the requested EC2 instance type in the specified region.
+Makes a spot request for the requested EC2 instance type in the specified region.
 If PARSEC_EC2_SERVER_KEY has not been exported in the shell rc file, it must be
 passed to the command using the --server-key flag.
 
-The amount to bid above the current highest spot price for the instance is
+The amount to bid relative to the current highest spot price for an instance is
 specified using the --bid flag, so if the current highest spot price is $0.20,
 running the command with --bid 0.10 will send a spot request with a bid price
-of $0.30. Alternatively this flag can be left blank if you don't want to bid
-higher than the current highest bid price.
+of $0.30.
 
 If the --plan flag is used, the spot request will not be sent and instead the
 'terraform plan' command will be run which will output to the console the details
@@ -49,84 +45,66 @@ of any AWS resources that will be created by running the start command.
 Examples:
 
 parsec-ec2 start --aws-region eu-west-1 --instance-type g3.4xlarge --bid 0.10
-parsec-ec2 start --aws-region eu-west-2 --instance-type g2.2xlarge --bid 0.10 ---server-key xxxxx
+parsec-ec2 start --aws-region eu-west-1 --instance-type g2.2xlarge --bid 0.10 ---server-key xxxxx
 parsec-ec2 start --aws-region eu-central-1 --instance-type g2.2xlarge --bid 0.10 --plan
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if !hasParsecServerKey(parsecServerKey) {
-			fmt.Println(`
-Either add 'export PARSEC_EC2_SERVER_KEY=xxxxx' in your shell rc file , or pass it to this command using the --server-key flag.`)
-			os.Exit(0)
-		}
-
-		if !isValidAwsRegion(validAwsRegions, awsRegion) {
-			fmt.Printf("\n'%s' is not a valid AWS region.\n", awsRegion)
+		if !hasServerKey(serverKey) {
+			fmt.Println("Add 'export PARSEC_EC2_SERVER_KEY=xxxxx' to your shell rc file or use the --server-key flag.")
 			os.Exit(1)
 		}
 
-		session, err := session.NewSession()
-		if err != nil {
-			fmt.Println(err)
+		if !isValidRegion(ec2Regions(), region) {
+			fmt.Printf("%s is not a valid AWS region id.\n", region)
+			os.Exit(1)
 		}
 
-		svc := ec2.New(session, &aws.Config{
-			Region: aws.String(awsRegion),
-		})
+		if !isValidGInstance(gInstances(), instanceType) {
+			fmt.Printf("%s is not a valid EC2 GPU instance type id.\n", instanceType)
+			os.Exit(1)
+		}
 
-		vpcID, err := getVpcID(svc)
+		ec2Client, err := getEc2Client(region)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		spotPrice, err := getSpotPrice(svc, instanceType)
-		if err != nil {
+		var p TfVars
+
+		if err := p.Calculate(ec2Client, region, serverKey, instanceType); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-		}
-
-		userBid := calculateUserBid(*spotPrice.SpotPrice, bid)
-		availabilityZone := *spotPrice.AvailabilityZone
-
-		subnetID, err := getSubnetID(svc, availabilityZone)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		currentSessionVars := tfVars{
-			SubnetID:        subnetID,
-			VpcID:           vpcID,
-			AwsRegion:       awsRegion,
-			Ec2InstanceType: instanceType,
-			ParsecServerKey: parsecServerKey,
-			UserBid:         userBid,
-		}
-
-		err = writeSessionVars(currentSessionVars)
-		if err != nil {
-			fmt.Println(err)
 		}
 
 		var start *exec.Cmd
 
+		// TODO: Use a template to generate a .tfvars file
 		if plan {
-			start = constructTerraformCommand(currentSessionVars, []string{tfCommands.plan})
+			start = tfCmdVars(p, []string{TfCmdPlan})
+
+			fmt.Printf("Planning spot request for a %s instance in %s with a bid of $%s...\n\n", p.InstanceType, p.Region, p.SpotPrice)
+			if err := executePrint(start); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			fmt.Println("If you are happy with this plan run the start command again without the --plan flag.")
 		} else {
-			start = constructTerraformCommand(currentSessionVars, []string{tfCommands.apply})
-		}
+			start = tfCmdVars(p, []string{TfCmdApply})
+			fmt.Printf("Making spot request for a %s instance in %s with a bid of $%s...\n", p.InstanceType, p.Region, p.SpotPrice)
 
-		err = executeTerraformCommandAndPrintOutput(start)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+			if err := executeSilent(start); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
-		if !plan {
-			fmt.Println(`
-A EC2 spot request has been created. You will be able to see on the AWS dashboard when it has been
-started and initialised. Once it has been initialised it will show as connectable in the Parsec
-desktop application.`)
+			fmt.Println("Spot request made successfully. Check the status of the spot request with 'parsec-ec2 status'.")
+
+			if err := p.Write(); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 		}
 	},
 }
@@ -139,14 +117,14 @@ func calculateUserBid(cheapestSpotPrice string, bidIncrease float64) string {
 }
 
 var (
-	bid             float64
-	parsecServerKey string
-	plan            bool
+	bid       float64
+	serverKey string
+	plan      bool
 )
 
 func init() {
 	RootCmd.AddCommand(startCmd)
-	startCmd.Flags().Float64VarP(&bid, "bid", "b", 0.00, "amount to bid above the current lowest spot price")
-	startCmd.Flags().StringVarP(&parsecServerKey, "server-key", "k", "", "Parsec server key")
+	startCmd.Flags().Float64VarP(&bid, "bid", "b", 0.00, "amount to bid relative to the current highest spot price")
+	startCmd.Flags().StringVarP(&serverKey, "server-key", "k", "", "Parsec server key")
 	startCmd.Flags().BoolVarP(&plan, "plan", "p", false, "plan out the resources to be created without creating them")
 }

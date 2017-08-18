@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"os"
-	"os/exec"
 
 	"github.com/spf13/cobra"
 )
@@ -28,57 +27,47 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialisation command to be run after initial installs and subsequent upgrades",
 	Long: `
-Copies the terraform and Windows provisioning user data template to the
-$HOME/.parsec-ec2 directory and runs 'terraform init' to initialise all
-the things required by the terraform template.
-
-If upgrading an existing installation, the $HOME/.parsec-ec2 folder should
-be manually removed before running the init command run again.
-
-After running this command it is recommended to export the environment
-variable PARSEC_EC2_SERVER_KEY in your shell rc file so that it doesn't
-need to be passed in manually every time the start command is run.
+Copies the latest Terraform and Windows provisioning templates to the
+$HOME/.parsec-ec2 directory and runs 'terraform init' to initialise any
+plugins required by Terraform.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		terraformFilePath := fmt.Sprintf("%s/%s", projectFolder, parsecTemplate)
-		userDataFilePath := fmt.Sprintf("%s/%s", projectFolder, userDataTemplate)
-
-		fileInfo, _ := os.Stat(appFolder)
-
-		// TODO: If the folder already exists, copy over the existing files instead of crapping out
-		if fileInfo != nil {
-			fmt.Println(`
-The init command has already been run on this machine. If you wish to run
-it again you must manually delete the $HOME/.parsec-ec2 folder first.`)
-			os.Exit(0)
+		// Check if the install directory exists
+		fmt.Println("Checking for existing installation...")
+		if _, err := os.Stat(installPath); os.IsNotExist(err) {
+			fmt.Print("No existing installation found. Copying templates and initialising... ")
+			// If it doesn't exist, make it
+			err := os.Mkdir(installPath, 0755)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		} else {
+			fmt.Print("Existing installation found. Copying latest templates... ")
 		}
 
-		err := os.Mkdir(appFolder, 0755)
-		if err != nil {
+		tSrc := fmt.Sprintf("%s/%s", projectPath, Template)
+		tDst := fmt.Sprintf("%s/%s", installPath, Template)
+		if err := copy(tSrc, tDst); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		err = copyFile(terraformFilePath, parsecTemplate, appFolder)
-		if err != nil {
+		uSrc := fmt.Sprintf("%s/%s", projectPath, Userdata)
+		uDst := fmt.Sprintf("%s/%s", installPath, Userdata)
+		if err := copy(uSrc, uDst); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		err = copyFile(userDataFilePath, userDataTemplate, appFolder)
-		if err != nil {
+		init := tfCmd([]string{TfCmdInit})
+
+		if err := executeSilent(init); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		init := exec.Command(terraform, tfCommands.init)
-		init.Dir = appFolder
-
-		err = executeTerraformCommandAndPrintOutput(init)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		fmt.Println("Complete.")
 	},
 }
 

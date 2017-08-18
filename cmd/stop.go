@@ -47,46 +47,35 @@ Example:
 parsec-ec2 stop
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, currentSession)
+		session := fmt.Sprintf("%s/%s", installPath, CurrentSession)
 
-		bytes, err := ioutil.ReadFile(currentSessionFile)
+		bytes, err := ioutil.ReadFile(session)
 		if err != nil {
-			fmt.Println(`
-No session information found.
-
-If you think there may still be a running instance, you can try
-'cd $HOME/.parsec-ec2 && terraform destroy', or alternatively
-refer to the EC2 dashboard on the AWS website.`)
+			fmt.Println("No session information found.")
 			os.Exit(1)
 		}
 
-		var currentSessionVars tfVars
+		var p TfVars
 
-		err = json.Unmarshal(bytes, &currentSessionVars)
-		if err != nil {
+		if err := json.Unmarshal(bytes, &p); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		destroy := constructTerraformCommand(currentSessionVars, []string{tfCommands.destroy, force})
+		destroy := tfCmdVars(p, []string{TfCmdDestroy, TfFlagForce})
 
-		// TODO: Make sure that there isn't a TFLOCK in the err output
-		err = executeTerraformCommandAndPrintOutput(destroy)
-		if err != nil {
+		fmt.Println("Terminating all AWS resources created by this session... ")
+		if err := executeSilent(destroy); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		// TODO: Only remove the session data if there was no err output from destroy
-		// TODO: Alternatively, do away with the sessionFile and use tf output variables
-		err = os.Remove(currentSessionFile)
-		if err != nil {
+		if err := os.Remove(session); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		fmt.Println(`
-All AWS resources have been successfully terminated.`)
+		fmt.Println("All resources have been successfully terminated.")
 	},
 }
 

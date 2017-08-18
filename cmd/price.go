@@ -19,38 +19,37 @@ import (
 
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/spf13/cobra"
 )
 
 // priceCmd represents the price command
 var priceCmd = &cobra.Command{
 	Use:   "price",
-	Short: "Get the lowest or highest spot price for an instance type in a given region",
+	Short: "Get the highest spot price for an instance type in a given region",
 	Long: `
 Looks for the current highest spot price for the requested instance type
 in the requested region.
 
-Examples:
+Example:
 
 parsec-ec2 price --region eu-west-1 --instance-type g2.2xlarge
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if !isValidAwsRegion(validAwsRegions, awsRegion) {
-			fmt.Printf("\n'%s' is not a valid AWS region.\n", awsRegion)
+		if !isValidRegion(ec2Regions(), region) {
+			fmt.Printf("%s is not a valid AWS region id.\n", region)
 			os.Exit(1)
 		}
 
-		session, err := session.NewSession()
-		if err != nil {
-			fmt.Println(err)
+		if !isValidGInstance(gInstances(), instanceType) {
+			fmt.Printf("%s is not a valid EC2 GPU instance type id.\n", instanceType)
+			os.Exit(1)
 		}
 
-		ec2Client := ec2.New(session, &aws.Config{
-			Region: aws.String(awsRegion),
-		})
+		ec2Client, err := getEc2Client(region)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
 		spotPrice, err := getSpotPrice(ec2Client, instanceType)
 		if err != nil {
@@ -60,7 +59,7 @@ parsec-ec2 price --region eu-west-1 --instance-type g2.2xlarge
 
 		dollarPrice := *spotPrice.SpotPrice
 
-		fmt.Printf("\nThe highest spot price in region %s for %s instances is currently $%s/hour.\n", awsRegion, instanceType, dollarPrice)
+		fmt.Printf("The highest spot price in the %s region for %s instances is currently $%s/hour.\n", region, instanceType, dollarPrice)
 	},
 }
 

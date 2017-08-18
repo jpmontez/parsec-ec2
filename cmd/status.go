@@ -20,8 +20,6 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/spf13/cobra"
 )
@@ -40,87 +38,73 @@ on the instance, which is what will allow the Parsec application to launch
 and log in with the provided Parsec server key.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		currentSessionFile := fmt.Sprintf("%s/%s", appFolder, currentSession)
+		session := fmt.Sprintf("%s/%s", installPath, CurrentSession)
 
-		bytes, err := ioutil.ReadFile(currentSessionFile)
+		bytes, err := ioutil.ReadFile(session)
 		if err != nil {
-			fmt.Println(`
-There are no sessions currently running.`)
+			fmt.Println("There are no sessions currently running.")
 			os.Exit(0)
 		}
 
-		var currentSessionVars tfVars
+		var p TfVars
 
-		err = json.Unmarshal(bytes, &currentSessionVars)
+		if err := json.Unmarshal(bytes, &p); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		ec2Client, err := getEc2Client(p.Region)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		session, err := session.NewSession()
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		svc := ec2.New(session, &aws.Config{
-			Region: aws.String(currentSessionVars.AwsRegion),
-		})
-
-		refresh := constructTerraformCommand(currentSessionVars, []string{tfCommands.refresh})
-
-		err = executeTerraformCommandAndSwallowOutput(refresh)
-		if err != nil {
+		refresh := tfCmdVars(p, []string{TfCmdRefresh})
+		if err := executeSilent(refresh); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		output := constructTerraformCommand(currentSessionVars, []string{tfCommands.output, spotInstanceID})
-
-		spotInstanceID, err := executeTerraformCommandAndReturnOutput(output)
-		if err != nil {
+		var o TfOutputs
+		if err := o.Read(); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		if len(spotInstanceID) < 1 {
-			fmt.Println(`
-The spot instance request has not yet been filled.`)
+		// TODO: Maybe write these to currentSession.json instead?
+		// TODO: Then won't be necessary to call refresh every time once instance id is there
+		// TODO: Also think about how to handle being outbid - maybe an output from tf?
+		// TODO: But that would need a refresh every time...
+
+		if len(o.SpotInstanceID.Value) < 1 {
+			fmt.Println("The spot instance request is awaiting fulfilment.")
 			os.Exit(0)
 		}
 
-		instanceIds := []*string{&spotInstanceID}
+		instanceIds := []*string{&o.SpotInstanceID.Value}
 
 		describeInstanceStatusInput := ec2.DescribeInstanceStatusInput{
 			InstanceIds: instanceIds,
 		}
 
-		describeInstanceStatusOutput, err := svc.DescribeInstanceStatus(&describeInstanceStatusInput)
+		describeInstanceStatusOutput, err := ec2Client.DescribeInstanceStatus(&describeInstanceStatusInput)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		instanceStatuses := describeInstanceStatusOutput.InstanceStatuses
-
-		if len(instanceStatuses) < 1 {
-			fmt.Println(`
-The spot instance request has been filled but initialisation status is
-not yet available.`)
+		if len(describeInstanceStatusOutput.InstanceStatuses) < 1 {
+			fmt.Println("The spot instance request has been filled but the instance initialisation status is not available yet.")
 			os.Exit(0)
 		}
 
-		instanceStatus := instanceStatuses[0].InstanceStatus.Status
+		instanceStatus := describeInstanceStatusOutput.InstanceStatuses[0].InstanceStatus.Status
 
-		if *instanceStatus == ok {
-			fmt.Println(`
-The spot instance has finished initialising and should either already or
-very shortly be visible on the Parsec desktop application.`)
-			os.Exit(0)
+		if *instanceStatus == OK {
+			fmt.Println("The instance has been initialised")
+			fmt.Println("It will be connectable once the provisioning script has finished running.")
 		} else {
-			fmt.Println(`
-The spot instance has not yet finished initialising. It will not yet be
-visible on the Parsec desktop application.`)
-			os.Exit(0)
+			fmt.Println("The instance is initialising.")
 		}
 	},
 }
