@@ -27,6 +27,7 @@
 .idea/**/modules.xml
 .idea/dictionaries
 .idea/parsec-ec2.iml
+.idea/go.imports.xml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
