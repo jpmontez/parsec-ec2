@@ -75,6 +75,7 @@ and log in with the provided Parsec server key.
 		// TODO: Then won't be necessary to call refresh every time once instance id is there
 		// TODO: Also think about how to handle being outbid - maybe an output from tf?
 		// TODO: But that would need a refresh every time...
+		// TODO: Even if instance-terminated-by-price, user should manually run stop to destroy the request
 
 		if len(o.SpotInstanceID.Value) < 1 {
 			fmt.Println("The spot instance request is awaiting fulfilment.")
