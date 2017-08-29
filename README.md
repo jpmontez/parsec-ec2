@@ -53,10 +53,7 @@ The `server_key` value is the one that you should assign to the `PARSEC_EC2_SERV
 After an initial installation or upgrade, all users should run `parsec-ec2 init`.
 
 The init command will create the directory `$HOME/.parsec-ec2` and the required Terraform template and provisioning
-userdata files.
-
-If upgrading an existing installation, the `$HOME/.parsec-ec2` folder should be manually removed before running the `init`
-command run again.
+userdata files. The command can safely be run multiple times.
 
 ### price
 The `price` command looks for the current highest spot price for the requested instance type in the requested region.
