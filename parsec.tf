@@ -24,6 +24,10 @@ variable "instance_type" {
   type = "string"
 }
 
+variable "ami" {
+  type = "string"
+}
+
 # Template
 
 provider "aws" {
@@ -34,7 +38,7 @@ data "aws_ami" "parsec" {
   most_recent = true
   filter {
     name = "name"
-    values = ["parsec-g3-ws2016-9"]
+    values = ["${var.ami}"]
   }
 }
 

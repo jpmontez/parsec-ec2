@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"strings"
+
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
@@ -16,6 +18,7 @@ type TfVars struct {
 	SpotPrice      string `json:"spot_price"`
 	SubnetID       string `json:"subnet_id"`
 	VpcID          string `json:"vpc_id"`
+	AMI            string `json:"ami"`
 }
 
 type TfOutputs struct {
@@ -56,7 +59,6 @@ type TfOutputs struct {
 	} `json:"vpc_id"`
 }
 
-// TODO: Marshal this out as a toml file and write to terraform.tfvars
 func (v *TfVars) Write() error {
 	bytes, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
@@ -93,6 +95,12 @@ func (v *TfVars) Calculate(ec2Client *ec2.EC2, region, serverKey, instanceType s
 	v.SpotPrice = spotBid
 	v.SubnetID = subnetID
 	v.VpcID = vpcID
+
+	if strings.Contains(instanceType, "g2.") {
+		v.AMI = "parsec-g2-ws2016-10"
+	} else if strings.Contains(instanceType, "g3.") {
+		v.AMI = "parsec-g3-ws2016-10"
+	}
 
 	return nil
 }

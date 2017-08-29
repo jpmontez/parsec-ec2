@@ -102,7 +102,7 @@ and log in with the provided Parsec server key.
 		instanceStatus := describeInstanceStatusOutput.InstanceStatuses[0].InstanceStatus.Status
 
 		if *instanceStatus == OK {
-			fmt.Println("The instance has been initialised")
+			fmt.Println("The instance has been initialised.")
 			fmt.Println("It will be connectable once the provisioning script has finished running.")
 		} else {
 			fmt.Println("The instance is initialising.")
