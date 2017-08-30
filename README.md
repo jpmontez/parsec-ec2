@@ -83,14 +83,14 @@ Examples:
 ```
 # With PARSEC_EC2_SERVER_KEY already set as an env variable
 parsec-ec2 start \
---aws-region eu-west-1 \
+--region eu-west-1 \
 --instance-type g3.4xlarge \
 --bid 0.10
 ```
 ```
 # With the server key passed using the --server-key flag
 parsec-ec2 start \
---aws-region eu-west-2 \
+--region eu-west-2 \
 --instance-type g2.2xlarge \
 --bid 0.10 \ 
 ---server-key xxxxx
@@ -98,7 +98,7 @@ parsec-ec2 start \
 ```
 # With the --plan flag
 parsec-ec2 start \
---aws-region eu-central-1 \
+--region eu-central-1 \
 --instance-type g2.2xlarge \
 --bid 0.10 \
 --plan
