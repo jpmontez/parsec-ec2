@@ -11,6 +11,8 @@ import (
 )
 
 type TfVars struct {
+	AMI            string `json:"ami"`
+	IP             string `json:"ip"`
 	InstanceType   string `json:"instance_type"`
 	Region         string `json:"region"`
 	ServerKey      string `json:"server_key"`
@@ -18,7 +20,6 @@ type TfVars struct {
 	SpotPrice      string `json:"spot_price"`
 	SubnetID       string `json:"subnet_id"`
 	VpcID          string `json:"vpc_id"`
-	AMI            string `json:"ami"`
 }
 
 type TfOutputs struct {
@@ -95,6 +96,13 @@ func (v *TfVars) Calculate(ec2Client *ec2.EC2, region, serverKey, instanceType s
 	v.SpotPrice = spotBid
 	v.SubnetID = subnetID
 	v.VpcID = vpcID
+
+	ip, err := getExternalIP()
+	if err != nil {
+		return err
+	}
+
+	v.IP = ip
 
 	if strings.Contains(instanceType, "g2.") {
 		v.AMI = "parsec-g2-ws2016-10"

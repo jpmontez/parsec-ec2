@@ -28,6 +28,10 @@ variable "ami" {
   type = "string"
 }
 
+variable "ip"  {
+  type = "string"
+}
+
 # Template
 
 provider "aws" {
@@ -49,37 +53,37 @@ resource "aws_security_group" "parsec" {
 
   ingress {
       from_port = 8000
-      to_port = 8004
+      to_port = 8040
       protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["${var.ip}"]
   }
 
   ingress {
       from_port = 5900
       to_port = 5900
       protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["${var.ip}"]
   }
 
   ingress {
       from_port = 5900
       to_port = 5900
       protocol = "udp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["${var.ip}"]
   }
 
   ingress {
       from_port = 8000
-      to_port = 8004
+      to_port = 8040
       protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["${var.ip}"]
   }
 
   ingress {
       from_port = 8000
-      to_port = 8004
+      to_port = 8040
       protocol = "udp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["${var.ip}"]
   }
 
   egress {

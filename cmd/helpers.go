@@ -2,15 +2,37 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"io/ioutil"
 	"os/exec"
 
+	"errors"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"strings"
 )
+
+func getExternalIP() (string, error) {
+	resp, err := http.Get("https://myexternalip.com/raw")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", nil
+		}
+		return fmt.Sprintf("%s/%s", strings.TrimSpace(string(b)), "32"), nil
+	}
+
+	return "", errors.New("Could not get external ip address.")
+}
 
 func getEc2Client(region string) (*ec2.EC2, error) {
 	session, err := session.NewSession()
@@ -105,6 +127,7 @@ func tfCmdVars(p TfVars, args []string) *exec.Cmd {
 	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_subnet_id=%s", p.SubnetID))
 	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_vpc_id=%s", p.VpcID))
 	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_ami=%s", p.AMI))
+	command.Env = append(command.Env, fmt.Sprintf("TF_VAR_ip=%s", p.IP))
 
 	return command
 }
