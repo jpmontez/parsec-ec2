@@ -71,12 +71,6 @@ and log in with the provided Parsec server key.
 			os.Exit(1)
 		}
 
-		// TODO: Maybe write these to currentSession.json instead?
-		// TODO: Then won't be necessary to call refresh every time once instance id is there
-		// TODO: Also think about how to handle being outbid - maybe an output from tf?
-		// TODO: But that would need a refresh every time...
-		// TODO: Even if instance-terminated-by-price, user should manually run stop to destroy the request
-
 		if len(o.SpotInstanceID.Value) < 1 {
 			fmt.Println("The spot instance request is awaiting fulfilment.")
 			os.Exit(0)
@@ -95,6 +89,10 @@ and log in with the provided Parsec server key.
 		}
 
 		if len(describeInstanceStatusOutput.InstanceStatuses) < 1 {
+			if o.SpotBidStatus.Value == "instance-terminated-by-price" {
+				fmt.Println("The spot price rose above your bid price and your instance was terminated. Run 'parsec-ec2 stop' to cleanup.")
+				os.Exit(0)
+			}
 			fmt.Println("The spot instance request has been filled but the instance initialisation status is not available yet.")
 			os.Exit(0)
 		}

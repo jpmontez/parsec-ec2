@@ -16,7 +16,6 @@ type TfVars struct {
 	InstanceType   string `json:"instance_type"`
 	Region         string `json:"region"`
 	ServerKey      string `json:"server_key"`
-	SpotInstanceID string `json:"spot_instance_id"`
 	SpotPrice      string `json:"spot_price"`
 	SubnetID       string `json:"subnet_id"`
 	VpcID          string `json:"vpc_id"`
@@ -43,6 +42,11 @@ type TfOutputs struct {
 		Type      string `json:"type"`
 		Value     string `json:"value"`
 	} `json:"spot_instance_id"`
+	SpotBidStatus struct {
+		Sensitive bool   `json:"sensitive"`
+		Type      string `json:"type"`
+		Value     string `json:"value"`
+	} `json:"spot_bid_status"`
 	SpotPrice struct {
 		Sensitive bool   `json:"sensitive"`
 		Type      string `json:"type"`

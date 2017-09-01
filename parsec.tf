@@ -107,6 +107,7 @@ resource "aws_spot_instance_request" "parsec" {
     ami = "${data.aws_ami.parsec.id}"
     subnet_id = "${var.subnet_id}"
     instance_type = "${var.instance_type}"
+    spot_type = "one-time"
 
     tags {
         Name = "ParsecServer"
@@ -156,6 +157,6 @@ output "spot_instance_id" {
   value = "${aws_spot_instance_request.parsec.spot_instance_id}"
 }
 
-//output "spot_bid_status" {
-//  value = "${aws_spot_instance_request.parsec.spot_bid_status}"
-//}
+output "spot_bid_status" {
+  value = "${aws_spot_instance_request.parsec.spot_bid_status}"
+}
