@@ -21,6 +21,9 @@ requests are very much encouraged and welcome.
 
 This has been developed with MacOS in mind, but should also work on Linux.
 
+Note that for now this project will not work with Terraform 0.11.0, as this version introduced some breaking changes in how the `terraform output` command works.
+For now, to continue using `parsec-ec2`, use Terraform 0.10.0. Multiple versions of Terraform can be managed using the [tfenv](https://github.com/kamatama41/tfenv) project.
+
 ## Installation
 The latest version of `parsec-ec2` can be installed using `go get`.
 
