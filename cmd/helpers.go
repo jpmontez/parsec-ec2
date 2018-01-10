@@ -17,7 +17,7 @@ import (
 )
 
 func getExternalIP() (string, error) {
-	resp, err := http.Get("https://icanhazip.com")
+	resp, err := http.Get("https://ipv4.icanhazip.com")
 	if err != nil {
 		return "", err
 	}
