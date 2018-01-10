@@ -109,9 +109,9 @@ func (v *TfVars) Calculate(ec2Client *ec2.EC2, region, serverKey, instanceType s
 	v.IP = ip
 
 	if strings.Contains(instanceType, "g2.") {
-		v.AMI = "parsec-g2-ws2016-10"
+		v.AMI = "parsec-g2-*"
 	} else if strings.Contains(instanceType, "g3.") {
-		v.AMI = "parsec-g3-ws2016-10"
+		v.AMI = "parsec-g3-*"
 	}
 
 	return nil
