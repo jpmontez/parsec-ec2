@@ -49,10 +49,10 @@ parsec-ec2 start --aws-region eu-west-1 --instance-type g2.2xlarge --bid 0.10 --
 parsec-ec2 start --aws-region eu-central-1 --instance-type g2.2xlarge --bid 0.10 --plan
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if !hasServerKey(serverKey) {
-			fmt.Println("Add 'export PARSEC_EC2_SERVER_KEY=xxxxx' to your shell rc file or use the --server-key flag.")
-			os.Exit(1)
-		}
+		// if !hasServerKey(serverKey) {
+		// 	fmt.Println("Add 'export PARSEC_EC2_SERVER_KEY=xxxxx' to your shell rc file or use the --server-key flag.")
+		// 	os.Exit(1)
+		// }
 
 		if !isValidRegion(ec2Regions(), region) {
 			fmt.Printf("%s is not a valid AWS region id.\n", region)

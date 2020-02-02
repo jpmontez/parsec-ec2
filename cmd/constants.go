@@ -71,6 +71,8 @@ func gInstances() []string {
 		ec2.InstanceTypeG34xlarge,
 		ec2.InstanceTypeG38xlarge,
 		ec2.InstanceTypeG316xlarge,
+		ec2.InstanceTypeP32xlarge,
+		ec2.InstanceTypeG4dn2xlarge,
 	}
 }
 
